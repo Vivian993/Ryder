@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>師說・隨身背誦卡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F3ECDC;
+    --paper-dark:#E6D9B8;
+    --ink:#262220;
+    --ink-soft:#5b5248;
+    --seal:#A63A2E;
+    --seal-dark:#7E2A21;
+    --indigo:#2E4A66;
+    --indigo-soft:#5F7C93;
+    --gold:#B8935A;
+    --green:#4B6B44;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(184,147,90,0.10), transparent 40%),
+      radial-gradient(circle at 90% 85%, rgba(166,58,46,0.06), transparent 45%);
+    font-family:"Noto Sans TC", sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding:0 0 28px 0;
+  }
+  /* Header */
+  header{
+    padding:22px 20px 10px 20px;
+    text-align:center;
+    position:relative;
+  }
+  header .eyebrow{
+    font-size:12px;
+    letter-spacing:3px;
+    color:var(--seal);
+    font-weight:700;
+  }
+  header h1{
+    font-family:"Noto Serif TC", serif;
+    font-weight:900;
+    font-size:26px;
+    margin:4px 0 2px 0;
+    letter-spacing:1px;
+  }
+  header p{
+    margin:0;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .sound-toggle{
+    position:absolute;
+    top:20px; right:16px;
+    width:38px;height:38px;
+    border-radius:50%;
+    border:1.5px solid var(--paper-dark);
+    background:rgba(255,255,255,0.55);
+    font-size:16px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--ink-soft);
+    transition:transform .15s ease;
+  }
+  .sound-toggle:active{ transform:scale(0.9); }
+  .sound-toggle.muted{
+    color:var(--seal);
+    border-color:rgba(166,58,46,0.35);
+  }
+  .hub-back{
+    position:absolute;
+    top:20px; left:16px;
+    width:38px;height:38px;
+    border-radius:50%;
+    border:1.5px solid var(--paper-dark);
+    background:rgba(255,255,255,0.55);
+    font-size:16px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--ink-soft);
+    text-decoration:none;
+  }
+  /* Tabs */
+  .tabs{
+    display:flex;
+    gap:8px;
+    padding:14px 16px 4px 16px;
+  }
+  .lesson-chips{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:10px 16px 2px 16px;
+    scrollbar-width:none;
+  }
+  .lesson-chips::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex:0 0 auto;
+    padding:7px 14px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    background:rgba(46,74,102,0.08);
+    color:var(--indigo);
+    white-space:nowrap;
+    cursor:pointer;
+    border:1.5px solid transparent;
+  }
+  .chip.active{
+    background:var(--indigo);
+    color:#fff;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:9px 4px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:700;
+    border:1.5px solid var(--paper-dark);
+    background:rgba(255,255,255,0.35);
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .tab.active{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+  }
+  .tab .count{
+    opacity:0.7;
+    font-weight:500;
+    font-size:11px;
+  }
+
+  /* Progress */
+  .progress-wrap{
+    padding:6px 22px 4px 22px;
+  }
+  .progress-track{
+    height:6px;
+    border-radius:4px;
+    background:var(--paper-dark);
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--gold), var(--seal));
+    border-radius:4px;
+    transition:width .3s ease;
+  }
+  .progress-label{
+    display:flex;
+    justify-content:space-between;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:5px;
+  }
+
+  /* Card area */
+  .card-stage{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:14px 20px 6px 20px;
+    position:relative;
+    min-height:340px;
+  }
+  .flashcard{
+    width:100%;
+    aspect-ratio:3/4;
+    max-height:52vh;
+    perspective:1400px;
+    cursor:pointer;
+  }
+  .flashcard-inner{
+    position:relative;
+    width:100%;
+    height:100%;
+    transition:transform .5s cubic-bezier(.4,.2,.2,1);
+    transform-style:preserve-3d;
+  }
+  .flashcard.flipped .flashcard-inner{
+    transform:rotateY(180deg);
+  }
+  .face{
+    position:absolute;
+    inset:0;
+    -webkit-backface-visibility:hidden;
+    backface-visibility:hidden;
+    border-radius:18px;
+    background:#FBF7EC;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.6) inset,
+      0 18px 34px -12px rgba(38,34,32,0.35),
+      0 2px 0 var(--paper-dark);
+    border:1px solid rgba(38,34,32,0.08);
+    display:flex;
+    flex-direction:column;
+    padding:22px;
+    overflow:hidden;
+  }
+  .face.back{
+    transform:rotateY(180deg);
+    background:#F7F1E1;
+  }
+  .face-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+  }
+  .num-badge{
+    width:34px;height:34px;
+    border-radius:50%;
+    border:1.6px solid var(--seal);
+    color:var(--seal);
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Noto Serif TC",serif;
+    font-weight:700;
+    font-size:15px;
+    flex-shrink:0;
+  }
+  .source-tag{
+    font-size:10.5px;
+    color:var(--indigo-soft);
+    background:rgba(46,74,102,0.08);
+    padding:3px 9px;
+    border-radius:12px;
+    font-weight:500;
+    white-space:normal;
+    text-align:right;
+    max-width:60%;
+    line-height:1.4;
+  }
+  .face-body{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:6px 2px;
+  }
+  .term-text{
+    font-family:"Noto Serif TC", serif;
+    font-weight:900;
+    font-size:clamp(28px, 8.5vw, 40px);
+    line-height:1.35;
+    letter-spacing:1px;
+    word-break:break-word;
+  }
+  .def-text{
+    font-family:"Noto Sans TC", sans-serif;
+    font-weight:500;
+    font-size:clamp(17px, 5.4vw, 21px);
+    line-height:1.75;
+    color:var(--ink);
+  }
+  .face-hint{
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    opacity:0.6;
+    letter-spacing:1px;
+  }
+  .familiar-stamp{
+    position:absolute;
+    top:14px; right:14px;
+    width:52px;height:52px;
+    border-radius:50%;
+    border:2.5px solid var(--seal);
+    color:var(--seal);
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Noto Serif TC",serif;
+    font-weight:900;
+    font-size:13px;
+    transform:rotate(-14deg) scale(0);
+    opacity:0;
+    transition:transform .35s cubic-bezier(.34,1.6,.64,1), opacity .2s ease;
+    pointer-events:none;
+    background:rgba(166,58,46,0.05);
+  }
+  .familiar-stamp.show{
+    transform:rotate(-14deg) scale(1);
+    opacity:0.9;
+  }
+
+  /* Nav row */
+  .nav-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    padding:14px 20px 6px 20px;
+  }
+  .nav-btn{
+    width:44px;height:44px;
+    border-radius:50%;
+    border:none;
+    background:var(--paper-dark);
+    color:var(--ink);
+    font-size:18px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .nav-btn:active{ transform:scale(0.92); }
+  .card-index{
+    font-size:13px;
+    color:var(--ink-soft);
+    font-weight:700;
+    min-width:70px;
+    text-align:center;
+  }
+
+  /* Action buttons */
+  .actions{
+    display:flex;
+    gap:12px;
+    padding:8px 20px 4px 20px;
+  }
+  .act-btn{
+    flex:1;
+    padding:15px 8px;
+    border-radius:16px;
+    border:none;
+    font-size:15px;
+    font-weight:700;
+    font-family:"Noto Sans TC",sans-serif;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    transition:transform .1s ease;
+  }
+  .act-btn:active{ transform:scale(0.96); }
+  .btn-unfamiliar{
+    background:rgba(46,74,102,0.10);
+    color:var(--indigo);
+    border:1.5px solid rgba(46,74,102,0.25);
+  }
+  .btn-familiar{
+    background:var(--seal);
+    color:#fff;
+  }
+
+  /* Utility row */
+  .utility-row{
+    display:flex;
+    justify-content:center;
+    gap:22px;
+    padding:20px 20px 4px 20px;
+  }
+  .util-link{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    text-decoration:underline;
+    text-underline-offset:3px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-family:"Noto Sans TC",sans-serif;
+    padding:4px;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:40px 30px;
+    color:var(--ink-soft);
+  }
+  .empty-state .big{
+    font-family:"Noto Serif TC",serif;
+    font-size:22px;
+    color:var(--ink);
+    margin-bottom:8px;
+  }
+
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(38,34,32,0.55);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:50;
+  }
+  .overlay.open{ display:flex; }
+  .sheet{
+    background:var(--paper);
+    width:100%;
+    max-width:480px;
+    border-radius:22px 22px 0 0;
+    padding:22px 22px 28px 22px;
+    max-height:85vh;
+    overflow-y:auto;
+    animation:slideUp .25s ease;
+  }
+  @keyframes slideUp{
+    from{ transform:translateY(30px); opacity:0; }
+    to{ transform:translateY(0); opacity:1; }
+  }
+  .sheet h2{
+    font-family:"Noto Serif TC",serif;
+    margin:0 0 14px 0;
+    font-size:19px;
+  }
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block;
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+  }
+  .field input, .field textarea, .field select{
+    width:100%;
+    padding:11px 12px;
+    border-radius:10px;
+    border:1.5px solid var(--paper-dark);
+    background:#FBF7EC;
+    font-family:"Noto Sans TC",sans-serif;
+    font-size:15px;
+    color:var(--ink);
+  }
+  .field textarea{ resize:vertical; min-height:70px; }
+  .sheet-actions{
+    display:flex;
+    gap:10px;
+    margin-top:6px;
+  }
+  .sheet-btn{
+    flex:1;
+    padding:13px;
+    border-radius:12px;
+    border:none;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .sheet-btn.primary{ background:var(--ink); color:var(--paper); }
+  .sheet-btn.secondary{ background:var(--paper-dark); color:var(--ink); }
+
+  .manage-list{ margin-top:6px; }
+  .manage-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid var(--paper-dark);
+  }
+  .manage-item .mi-text{ font-size:13.5px; }
+  .manage-item .mi-text b{ font-family:"Noto Serif TC",serif; }
+  .manage-item .mi-def{ color:var(--ink-soft); font-size:12px; margin-top:2px; }
+  .mi-del{
+    background:none;border:none;color:var(--seal);
+    font-size:13px; font-weight:700; cursor:pointer; flex-shrink:0;
+  }
+  .toast{
+    position:fixed;
+    bottom:24px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:var(--paper);
+    padding:10px 20px; border-radius:999px;
+    font-size:13px; opacity:0; pointer-events:none;
+    transition:all .25s ease;
+    z-index:80;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* Quiz config panel (inside card-stage) */
+  .quiz-config{
+    width:100%;
+    text-align:center;
+    padding:6px 4px;
+  }
+  .qc-title{
+    font-family:"Noto Serif TC",serif;
+    font-weight:900;
+    font-size:22px;
+    margin-bottom:6px;
+  }
+  .qc-sub{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:22px;
+    line-height:1.6;
+  }
+  .qc-block{ margin-bottom:20px; text-align:left; }
+  .qc-label{
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .qc-options{ display:flex; flex-direction:column; gap:8px; }
+  .qc-opt{
+    padding:13px 16px;
+    border-radius:13px;
+    border:1.5px solid var(--paper-dark);
+    background:#FBF7EC;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .qc-opt.active{
+    border-color:var(--indigo);
+    background:rgba(46,74,102,0.10);
+    color:var(--indigo);
+  }
+  .qc-opt.disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+  }
+
+  /* Full-screen quiz overlay */
+  .quiz-overlay{
+    position:fixed; inset:0;
+    background:var(--paper);
+    display:none;
+    flex-direction:column;
+    z-index:100;
+    max-width:480px;
+    margin:0 auto;
+  }
+  .quiz-overlay.open{ display:flex; }
+  .quiz-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px 20px 6px 20px;
+  }
+  .quiz-tag{
+    font-size:12px;
+    font-weight:700;
+    color:var(--indigo);
+    background:rgba(46,74,102,0.08);
+    padding:6px 12px;
+    border-radius:999px;
+  }
+  .quiz-close{
+    width:34px;height:34px;
+    border-radius:50%;
+    border:none;
+    background:var(--paper-dark);
+    color:var(--ink);
+    font-size:15px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .quiz-body{
+    flex:1;
+    overflow-y:auto;
+    padding:8px 20px 34px 20px;
+  }
+  .quiz-progress{
+    text-align:right;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .quiz-prompt{
+    text-align:center;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:18px 0 8px 0;
+  }
+  .quiz-term{
+    text-align:center;
+    font-family:"Noto Serif TC",serif;
+    font-weight:900;
+    font-size:clamp(26px, 8vw, 34px);
+    margin-bottom:26px;
+    letter-spacing:1px;
+    word-break:break-word;
+  }
+  .quiz-opt{
+    border:1.5px solid var(--paper-dark);
+    background:#FBF7EC;
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:12px;
+    font-size:14.5px;
+    line-height:1.6;
+    cursor:pointer;
+  }
+  .quiz-opt .opt-letter{
+    font-weight:900;
+    color:var(--indigo);
+    margin-right:4px;
+  }
+  .quiz-opt.correct{
+    border-color:var(--green);
+    background:rgba(75,107,68,0.12);
+  }
+  .quiz-opt.wrong{
+    border-color:var(--seal);
+    background:rgba(166,58,46,0.10);
+  }
+  .quiz-opt.disabled{ cursor:default; }
+  .quiz-feedback{
+    text-align:center;
+    font-weight:700;
+    font-size:15px;
+    margin:16px 0 6px 0;
+  }
+  .quiz-feedback.correct{ color:var(--green); }
+  .quiz-feedback.wrong{ color:var(--seal); }
+  .quiz-next-btn{
+    width:100%;
+    padding:15px;
+    border-radius:14px;
+    border:none;
+    background:var(--green);
+    color:#fff;
+    font-weight:700;
+    font-size:15px;
+    margin-top:16px;
+    cursor:pointer;
+  }
+  .quiz-summary-title{
+    text-align:center;
+    font-family:"Noto Serif TC",serif;
+    font-weight:900;
+    font-size:22px;
+    margin:16px 0 6px 0;
+  }
+  .quiz-summary-score{
+    text-align:center;
+    font-size:15px;
+    color:var(--ink-soft);
+    margin-bottom:20px;
+  }
+  .quiz-wrong-item{
+    background:#FBF7EC;
+    border:1px solid var(--paper-dark);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:10px;
+  }
+  .quiz-wrong-item b{ font-family:"Noto Serif TC",serif; }
+  .quiz-wrong-item .def{ color:var(--ink-soft); font-size:13px; margin-top:4px; }
+  .quiz-summary-actions{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:18px;
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <header>
+    <a class="hub-back" href="index.html" aria-label="回到首頁">‹</a>
+    <button class="sound-toggle" id="soundToggle" aria-label="切換音效">🔊</button>
+    <div class="eyebrow">高中國文・第三課</div>
+    <h1>師說・隨身背誦卡</h1>
+    <p>點卡片翻面看解釋，熟悉就蓋章，不熟悉自動存進複習區</p>
+  </header>
+
+  <div class="tabs">
+    <div class="tab" data-tab="main">課文注釋 <span class="count" id="cnt-main"></span></div>
+    <div class="tab" data-tab="review">加強複習 <span class="count" id="cnt-review"></span></div>
+    <div class="tab" data-tab="bonus">作者背景 <span class="count" id="cnt-bonus"></span></div>
+    <div class="tab" data-tab="quiz">📝 測驗</div>
+  </div>
+
+  <div class="lesson-chips" id="lessonChips"></div>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-label">
+      <span id="progressText">已熟悉 0 / 0</span>
+      <span id="deckLabel">課文注釋</span>
+    </div>
+  </div>
+
+  <div class="card-stage" id="cardStage">
+    <!-- filled by JS -->
+  </div>
+
+  <div class="nav-row" id="navRow">
+    <button class="nav-btn" id="prevBtn">‹</button>
+    <div class="card-index" id="cardIndex">1 / 1</div>
+    <button class="nav-btn" id="nextBtn">›</button>
+  </div>
+
+  <div class="actions" id="actionsRow">
+    <button class="act-btn btn-unfamiliar" id="markUnfamiliar">🔖 不熟悉，加入複習</button>
+    <button class="act-btn btn-familiar" id="markFamiliar">✅ 熟悉，蓋章</button>
+  </div>
+
+  <div class="utility-row">
+    <button class="util-link" id="openAdd">＋ 新增卡片</button>
+    <button class="util-link" id="openManage">管理 / 備份</button>
+  </div>
+
+</div>
+
+<!-- Add card sheet -->
+<div class="overlay" id="addOverlay">
+  <div class="sheet">
+    <h2>新增一張背誦卡</h2>
+    <div class="field">
+      <label>課別（例如：第四課・訓儉示康；已有的課會自動列出）</label>
+      <input type="text" id="addLesson" list="lessonOptions" placeholder="輸入或選擇課別">
+      <datalist id="lessonOptions"></datalist>
+    </div>
+    <div class="field">
+      <label>詞語 / 句子（正面）</label>
+      <input type="text" id="addTerm" placeholder="例如：巫">
+    </div>
+    <div class="field">
+      <label>解釋（背面）</label>
+      <textarea id="addDef" placeholder="例如：以降神求福、驅鬼除邪為業的人。"></textarea>
+    </div>
+    <div class="field">
+      <label>出處備註（選填）</label>
+      <input type="text" id="addSource" placeholder="例如：第48頁 補充">
+    </div>
+    <div class="field">
+      <label>放入哪一區</label>
+      <select id="addCategory">
+        <option value="main">課文注釋</option>
+        <option value="bonus">作者背景</option>
+      </select>
+    </div>
+    <div class="sheet-actions">
+      <button class="sheet-btn secondary" id="cancelAdd">取消</button>
+      <button class="sheet-btn primary" id="saveAdd">儲存卡片</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manage / backup sheet -->
+<div class="overlay" id="manageOverlay">
+  <div class="sheet">
+    <h2>管理與備份</h2>
+    <div class="sheet-actions">
+      <button class="sheet-btn primary" id="exportBtn">📤 匯出備份檔</button>
+      <button class="sheet-btn secondary" id="resetReviewBtn">重設複習區</button>
+    </div>
+    <div class="field" style="margin-top:16px;">
+      <label>匯入備份檔（貼上匯出的 JSON 文字）</label>
+      <textarea id="importText" placeholder="貼上備份內容後按下方匯入"></textarea>
+    </div>
+    <div class="sheet-actions">
+      <button class="sheet-btn secondary" id="importBtn">匯入</button>
+      <button class="sheet-btn secondary" id="closeManage">關閉</button>
+    </div>
+    <h2 style="margin-top:22px; font-size:16px;">所有卡片（點刪除鍵可移除自建卡片）</h2>
+    <div class="manage-list" id="manageList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Full-screen quiz overlay -->
+<div class="quiz-overlay" id="quizOverlay">
+  <div class="quiz-header">
+    <div class="quiz-tag" id="quizTag">單字測驗挑戰</div>
+    <button class="quiz-close" id="quizCloseBtn">✕</button>
+  </div>
+  <div class="quiz-body" id="quizBody"></div>
+</div>
+
+<script>
+(function(){
+  // ============ Sound engine (synthesized, no audio files needed) ============
+  const SoundManager = (function(){
+    let ctx = null;
+    let enabled = true;
+
+    function ensureCtx(){
+      if(!ctx){
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if(!AC) return null;
+        ctx = new AC();
+      }
+      if(ctx.state === 'suspended'){ ctx.resume(); }
+      return ctx;
+    }
+
+    function tone(freq, duration, opts={}){
+      if(!enabled) return;
+      const audioCtx = ensureCtx();
+      if(!audioCtx) return;
+      const t0 = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = opts.type || 'sine';
+      osc.frequency.setValueAtTime(freq, t0);
+      if(opts.freqTo){
+        osc.frequency.exponentialRampToValueAtTime(Math.max(opts.freqTo,1), t0 + duration);
+      }
+      const peak = opts.volume || 0.18;
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(peak, t0 + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t0);
+      osc.stop(t0 + duration + 0.03);
+    }
+
+    function noiseBurst(duration, opts={}){
+      if(!enabled) return;
+      const audioCtx = ensureCtx();
+      if(!audioCtx) return;
+      const bufferSize = Math.max(1, Math.floor(audioCtx.sampleRate * duration));
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for(let i=0;i<bufferSize;i++){
+        data[i] = (Math.random()*2-1) * Math.pow(1 - i/bufferSize, 2);
+      }
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = opts.filterType || 'bandpass';
+      filter.frequency.value = opts.filterFreq || 1200;
+      const gain = audioCtx.createGain();
+      gain.gain.value = opts.volume || 0.12;
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      source.start();
+    }
+
+    return {
+      setEnabled(v){ enabled = v; },
+      isEnabled(){ return enabled; },
+      tap(){ tone(720, 0.055, {type:'sine', volume:0.10}); },
+      flip(){ noiseBurst(0.11, {filterType:'highpass', filterFreq:1500, volume:0.07}); },
+      stamp(){
+        tone(95, 0.2, {type:'sine', volume:0.28, freqTo:55});
+        setTimeout(()=>noiseBurst(0.05, {filterType:'lowpass', filterFreq:400, volume:0.09}), 15);
+      },
+      markReview(){ tone(360, 0.13, {type:'triangle', volume:0.14}); },
+      correct(){
+        tone(523.25, 0.1, {type:'sine', volume:0.16});
+        setTimeout(()=>tone(659.25, 0.14, {type:'sine', volume:0.16}), 90);
+        setTimeout(()=>tone(783.99, 0.18, {type:'sine', volume:0.16}), 180);
+      },
+      wrong(){
+        tone(220, 0.22, {type:'sawtooth', volume:0.10, freqTo:140});
+      },
+      complete(){
+        [523.25, 659.25, 783.99, 1046.5].forEach((f,i)=>
+          setTimeout(()=>tone(f, 0.2, {type:'sine', volume:0.15}), i*110)
+        );
+      },
+      openSheet(){ tone(480, 0.07, {type:'sine', volume:0.09}); },
+      closeSheet(){ tone(340, 0.07, {type:'sine', volume:0.09}); }
+    };
+  })();
+
+  const SOUND_PREF_KEY = 'shishuo:soundEnabled:v1';
+
+  // Storage adapter: uses Claude's window.storage when previewing inside claude.ai,
+  // and falls back to the browser's own localStorage once this file is hosted
+  // on GitHub Pages / opened as a home-screen app (where window.storage doesn't exist).
+  const Storage = {
+    async get(key){
+      if(window.storage){
+        try{ return await window.storage.get(key, false); }catch(e){ return null; }
+      }
+      try{
+        const v = localStorage.getItem(key);
+        return v === null ? null : { key, value: v, shared:false };
+      }catch(e){ return null; }
+    },
+    async set(key, value){
+      if(window.storage){
+        try{ return await window.storage.set(key, value, false); }catch(e){ return null; }
+      }
+      try{
+        localStorage.setItem(key, value);
+        return { key, value, shared:false };
+      }catch(e){ return null; }
+    }
+  };
+
+  const STORAGE_KEY = 'shishuo:cards:v1';
+
+  const LESSON_3 = "第三課・師說";
+
+  const BUILTIN_MAIN = [
+    ["①","學者","學習的人。","第46頁"],
+    ["②","所以","用來。","第46頁"],
+    ["③","傳道受業解惑","傳授道理、講學業、解答疑惑。受，此通「授」。","第46頁"],
+    ["④","生而知之","天生就懂得道理、學業。","第46頁"],
+    ["⑤","孰","誰。","第46頁"],
+    ["⑥","其為惑也","那些成為疑難的問題。","第46頁"],
+    ["⑦","聞","聽到，引申為懂得。","第46頁"],
+    ["⑧","吾從而師之","我追隨且向他學習。師，學習，此作動詞用。","第46頁"],
+    ["⑨","師道","學習道理。","第46頁"],
+    ["⑩","夫庸知","何必知道。夫，發語詞。庸，豈，表示反詰語氣。","第46頁"],
+    ["⑪","無貴無賤無長無少","不論地位高低，不論年紀大小。","第46頁"],
+    ["⑫","師道","從師問學的傳統。","第47頁"],
+    ["⑬","出人","超越一般人。","第47頁"],
+    ["⑭","下","不如。","第47頁"],
+    ["⑮","恥學於師","以向老師學習為恥。恥，意動用法，表示「以……為恥」。","第47頁"],
+    ["⑯","益","更加。","第47頁"],
+    ["⑰","所以","為何，表示推測語氣。","第47頁"],
+    ["⑱","因","大概，表示原因。","第47頁"],
+    ["⑲","授之書而習其句讀","教授童子讀書寫字、學習文章的斷句。","第48頁"],
+    ["⑳","讀","通「逗」，句讀，文章的斷句。","第48頁"],
+    ["㉑","句讀之不知，惑之不解","有的人不知道文章的斷句，卻能解決疑惑；有的人不肯從師學習，卻是有疑惑不能解決。","第48頁"],
+    ["㉒","小學而大遺","學習小知識，卻遺漏大學問。小，指「句讀」。大，指「道」、「業」上的疑惑。","第48頁"],
+    ["㉓","巫","以降神求福、驅鬼除邪為業的人。","第48頁"],
+    ["㉔","樂師","以演奏音樂為業的人。","第48頁"],
+    ["㉕","百工","從事各種工藝的人。","第48頁"],
+    ["㉖","不恥相師","不以互相學習為恥。相，互相。","第48頁"],
+    ["㉗","族","類，指這一類的人。","第48頁"],
+    ["㉘","云者","語尾助詞，表示「如此等等」的意思。","第48頁"],
+    ["㉙","位卑則足羞","向地位低的人學習，就感到非常羞恥。足，非常。","第48頁"],
+    ["㉚","官盛則近諛","向官職高的人學習，就覺得近於諂媚。諛，諂媚。","第48頁"],
+    ["㉛","君子不齒","士大夫不屑與他們為伍。君子，此指上文中的「士大夫」。齒，引申為並列，此作動詞用。","第49頁"],
+    ["㉜","乃","竟然。","第49頁"],
+    ["㉝","不能及","比不上。","第49頁"]
+  ];
+
+  const BUILTIN_BONUS = [
+    ["作","作者","韓愈","第46頁"],
+    ["字","字號","字退之","第46頁"],
+    ["生","生卒年","唐代宗大曆三年（768）～唐穆宗長慶四年（824）","第46頁"],
+    ["籍","籍貫","河南河陽（今河南孟州）人","第46頁"],
+    ["郡","郡望／別稱","昌黎（今河北昌黎），世稱「韓昌黎」、「韓文公」","第46頁"],
+    ["諡","諡號","文","第46頁"],
+    ["選","本文選自","《昌黎先生集》","第46頁"],
+    ["說","「說」的文體","古代議論文體的一種，用來闡述己見、申明事理","第46頁"],
+    ["背","寫作背景","唐德宗貞元年間，韓愈感於當時士大夫恥於從師問學，藉李蟠問學之機撰寫本文","第46頁"],
+    ["古","古文運動","韓愈與柳宗元提倡的散文改革運動，反對過度重視形式的駢文，主張文以載道","第47頁"],
+    ["八","唐宋八大家","韓愈、柳宗元、歐陽脩、曾鞏、王安石、蘇洵、蘇軾、蘇轍","第47頁"],
+    ["蘇","蘇軾的稱許","稱韓愈「文起八代之衰，道濟天下之溺」，又稱他「匹夫而為百世師，一言而為天下法」","第47頁"],
+    ["貶","潮州事件","因諫迎佛骨觸怒憲宗，被貶為潮州刺史；有〈祭鱷魚文〉、〈潮州刺史謝上表〉等作品","第47頁"]
+  ];
+
+  function makeId(prefix, i){ return prefix + '-' + i; }
+
+  function seedData(){
+    const cards = [];
+    BUILTIN_MAIN.forEach((c,i)=>{
+      cards.push({id:makeId('main',i), num:c[0], term:c[1], def:c[2], source:c[3], lesson:LESSON_3, category:'main', familiar:false, builtin:true});
+    });
+    BUILTIN_BONUS.forEach((c,i)=>{
+      cards.push({id:makeId('bonus',i), num:c[0], term:c[1], def:c[2], source:c[3], lesson:LESSON_3, category:'bonus', familiar:false, builtin:true});
+    });
+    return cards;
+  }
+
+  let cards = [];
+  let state = { tab:'main', index:0, flipped:false, lesson:'all' };
+
+  function getLessons(){
+    const set = new Set(cards.map(c=>c.lesson || '未分類'));
+    return Array.from(set);
+  }
+
+  async function loadCards(){
+    try{
+      const res = await Storage.get(STORAGE_KEY);
+      if(res && res.value){
+        cards = JSON.parse(res.value);
+        return;
+      }
+    }catch(e){ /* not found yet */ }
+    cards = seedData();
+    await saveCards();
+  }
+
+  async function saveCards(){
+    try{
+      await Storage.set(STORAGE_KEY, JSON.stringify(cards));
+    }catch(e){ console.error('儲存失敗', e); }
+  }
+
+  function currentDeck(){
+    let deck;
+    if(state.tab === 'review') deck = cards.filter(c=>!c.familiar);
+    else deck = cards.filter(c=>c.category === state.tab);
+    if(state.lesson !== 'all') deck = deck.filter(c=>(c.lesson || '未分類') === state.lesson);
+    return deck;
+  }
+
+  function renderLessonChips(){
+    const container = document.getElementById('lessonChips');
+    const lessons = getLessons();
+    if(lessons.length <= 1){
+      container.style.display = 'none';
+      container.innerHTML = '';
+      return;
+    }
+    container.style.display = 'flex';
+    container.innerHTML = ['all', ...lessons].map(l=>
+      `<div class="chip ${state.lesson===l?'active':''}" data-lesson="${l}">${l==='all' ? '全部課' : l}</div>`
+    ).join('');
+    container.querySelectorAll('.chip').forEach(ch=>{
+      ch.addEventListener('click', ()=>{
+        SoundManager.tap();
+        state.lesson = ch.dataset.lesson;
+        state.index = 0;
+        state.flipped = false;
+        render();
+      });
+    });
+  }
+
+  function counts(){
+    const main = cards.filter(c=>c.category==='main');
+    const bonus = cards.filter(c=>c.category==='bonus');
+    const review = cards.filter(c=>!c.familiar);
+    document.getElementById('cnt-main').textContent = `${main.filter(c=>c.familiar).length}/${main.length}`;
+    document.getElementById('cnt-bonus').textContent = `${bonus.filter(c=>c.familiar).length}/${bonus.length}`;
+    document.getElementById('cnt-review').textContent = review.length;
+  }
+
+  function render(){
+    counts();
+    renderLessonChips();
+    document.querySelectorAll('.tab').forEach(t=>{
+      t.classList.toggle('active', t.dataset.tab === state.tab);
+    });
+    const stage = document.getElementById('cardStage');
+    const navRow = document.getElementById('navRow');
+    const actionsRow = document.getElementById('actionsRow');
+    const progressWrap = document.getElementById('progressWrap');
+
+    if(state.tab === 'quiz'){
+      navRow.style.display = 'none';
+      actionsRow.style.display = 'none';
+      progressWrap.style.display = 'none';
+      renderQuizConfig();
+      return;
+    }
+    progressWrap.style.display = 'block';
+
+    const deck = currentDeck();
+    const labelMap = {main:'課文注釋', review:'加強複習', bonus:'作者背景'};
+    document.getElementById('deckLabel').textContent = labelMap[state.tab];
+
+    if(deck.length === 0){
+      navRow.style.display = 'none';
+      actionsRow.style.display = 'none';
+      const msg = state.tab === 'review'
+        ? '目前沒有需要加強複習的卡片，太棒了！'
+        : '這一區還沒有卡片，點下方「新增卡片」開始建立吧。';
+      stage.innerHTML = `<div class="empty-state"><div class="big">${state.tab==='review' ? '🎉 全部熟悉' : '📇 尚無卡片'}</div><div>${msg}</div></div>`;
+      document.getElementById('progressFill').style.width = '0%';
+      document.getElementById('progressText').textContent = '已熟悉 0 / 0';
+      return;
+    }
+    navRow.style.display = 'flex';
+    actionsRow.style.display = 'flex';
+
+    if(state.index >= deck.length) state.index = 0;
+    if(state.index < 0) state.index = deck.length - 1;
+    const c = deck[state.index];
+    const tagText = [c.lesson, c.source].filter(Boolean).join(' · ');
+
+    stage.innerHTML = `
+      <div class="flashcard ${state.flipped ? 'flipped':''}" id="flashcard">
+        <div class="flashcard-inner">
+          <div class="face front">
+            <div class="face-top">
+              <div class="num-badge">${c.num}</div>
+              <div class="source-tag">${tagText}</div>
+            </div>
+            <div class="face-body"><div class="term-text">${c.term}</div></div>
+            <div class="face-hint">點一下看解釋</div>
+            <div class="familiar-stamp" id="stampFront">已 誦</div>
+          </div>
+          <div class="face back">
+            <div class="face-top">
+              <div class="num-badge">${c.num}</div>
+              <div class="source-tag">${tagText}</div>
+            </div>
+            <div class="face-body"><div class="def-text">${c.def}</div></div>
+            <div class="face-hint">再點一下回正面</div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('flashcard').addEventListener('click', ()=>{
+      SoundManager.flip();
+      state.flipped = !state.flipped;
+      document.getElementById('flashcard').classList.toggle('flipped', state.flipped);
+    });
+
+    document.getElementById('cardIndex').textContent = `${state.index+1} / ${deck.length}`;
+
+    const total = deck.length;
+    const done = deck.filter(x=>x.familiar).length;
+    document.getElementById('progressFill').style.width = total ? (done/total*100)+'%' : '0%';
+    document.getElementById('progressText').textContent = `已熟悉 ${done} / ${total}`;
+
+    const stamp = document.getElementById('stampFront');
+    if(c.familiar){ stamp.classList.add('show'); } else { stamp.classList.remove('show'); }
+  }
+
+  function goto(delta){
+    state.index += delta;
+    state.flipped = false;
+    render();
+  }
+
+  async function markCard(id, familiar){
+    const c = cards.find(x=>x.id===id);
+    if(!c) return;
+    c.familiar = familiar;
+    await saveCards();
+    if(familiar){ SoundManager.stamp(); } else { SoundManager.markReview(); }
+    showToast(familiar ? '已蓋章，標記為熟悉 ✅' : '已加入加強複習區 🔖');
+    setTimeout(()=>{ goto(1); }, 260);
+  }
+
+  let toastTimer;
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), 1600);
+  }
+
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      SoundManager.tap();
+      const prevTab = state.tab;
+      state.tab = t.dataset.tab;
+      state.index = 0;
+      state.flipped = false;
+      if(state.tab === 'quiz'){
+        state.quizDefaultRange = prevTab === 'review' ? 'review' : 'all';
+      }
+      render();
+    });
+  });
+
+  document.getElementById('prevBtn').addEventListener('click', ()=>{ SoundManager.tap(); goto(-1); });
+  document.getElementById('nextBtn').addEventListener('click', ()=>{ SoundManager.tap(); goto(1); });
+
+  document.getElementById('markFamiliar').addEventListener('click', ()=>{
+    const deck = currentDeck();
+    if(!deck.length) return;
+    markCard(deck[state.index].id, true);
+  });
+  document.getElementById('markUnfamiliar').addEventListener('click', ()=>{
+    const deck = currentDeck();
+    if(!deck.length) return;
+    markCard(deck[state.index].id, false);
+  });
+
+  // Add card sheet
+  const addOverlay = document.getElementById('addOverlay');
+  document.getElementById('openAdd').addEventListener('click', ()=>{
+    SoundManager.openSheet();
+    document.getElementById('lessonOptions').innerHTML = getLessons().map(l=>`<option value="${l}"></option>`).join('');
+    document.getElementById('addLesson').value = state.lesson !== 'all' ? state.lesson : (getLessons()[0] || '');
+    addOverlay.classList.add('open');
+  });
+  document.getElementById('cancelAdd').addEventListener('click', ()=>{ SoundManager.closeSheet(); addOverlay.classList.remove('open'); });
+  document.getElementById('saveAdd').addEventListener('click', async ()=>{
+    const term = document.getElementById('addTerm').value.trim();
+    const def = document.getElementById('addDef').value.trim();
+    const source = document.getElementById('addSource').value.trim();
+    const category = document.getElementById('addCategory').value;
+    const lesson = document.getElementById('addLesson').value.trim() || '未分類';
+    if(!term || !def){ showToast('請填寫詞語與解釋'); return; }
+    cards.push({
+      id: 'custom-' + Date.now(),
+      num: '＋',
+      term, def, source: source || '自建卡片',
+      lesson, category, familiar:false, builtin:false
+    });
+    await saveCards();
+    SoundManager.tap();
+    document.getElementById('addTerm').value='';
+    document.getElementById('addDef').value='';
+    document.getElementById('addSource').value='';
+    addOverlay.classList.remove('open');
+    showToast('已新增卡片');
+    state.tab = category;
+    state.lesson = lesson;
+    state.index = 0;
+    render();
+  });
+
+  // Manage sheet
+  const manageOverlay = document.getElementById('manageOverlay');
+  document.getElementById('openManage').addEventListener('click', ()=>{
+    SoundManager.openSheet();
+    renderManageList();
+    manageOverlay.classList.add('open');
+  });
+  document.getElementById('closeManage').addEventListener('click', ()=>{ SoundManager.closeSheet(); manageOverlay.classList.remove('open'); });
+
+  function renderManageList(){
+    const list = document.getElementById('manageList');
+    const lessons = Array.from(new Set(cards.map(c=>c.lesson || '未分類')));
+    let html = '';
+    lessons.forEach(lesson=>{
+      const group = cards.filter(c=>(c.lesson||'未分類')===lesson);
+      html += `<div style="margin-top:16px;font-weight:700;font-family:'Noto Serif TC',serif;font-size:14px;color:var(--seal);">${lesson}</div>`;
+      html += group.map(c=>`
+        <div class="manage-item">
+          <div class="mi-text">
+            <b>${c.num} ${c.term}</b> <span style="color:var(--ink-soft);font-size:11px;">（${c.category==='main'?'課文注釋':'作者背景'}${c.familiar?' · 已熟悉':''}）</span>
+            <div class="mi-def">${c.def}</div>
+          </div>
+          ${c.builtin ? '' : `<button class="mi-del" data-id="${c.id}">刪除</button>`}
+        </div>
+      `).join('');
+    });
+    list.innerHTML = html;
+    list.querySelectorAll('.mi-del').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        SoundManager.markReview();
+        cards = cards.filter(c=>c.id !== btn.dataset.id);
+        await saveCards();
+        renderManageList();
+        render();
+      });
+    });
+  }
+
+  document.getElementById('exportBtn').addEventListener('click', ()=>{
+    SoundManager.tap();
+    const dataStr = JSON.stringify(cards, null, 2);
+    const blob = new Blob([dataStr], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '師說背誦卡_備份.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('備份檔已下載');
+  });
+
+  document.getElementById('resetReviewBtn').addEventListener('click', async ()=>{
+    SoundManager.tap();
+    cards.forEach(c=>c.familiar=false);
+    await saveCards();
+    renderManageList();
+    render();
+    showToast('已重設，全部卡片回到未熟悉');
+  });
+
+  document.getElementById('importBtn').addEventListener('click', async ()=>{
+    const txt = document.getElementById('importText').value.trim();
+    if(!txt){ showToast('請先貼上備份內容'); return; }
+    try{
+      const imported = JSON.parse(txt);
+      if(!Array.isArray(imported)) throw new Error('格式錯誤');
+      cards = imported;
+      await saveCards();
+      SoundManager.tap();
+      document.getElementById('importText').value = '';
+      renderManageList();
+      render();
+      showToast('匯入成功');
+    }catch(e){
+      showToast('匯入失敗，請確認貼上完整的備份文字');
+    }
+  });
+
+  // ============ Quiz feature ============
+  let quizState = null;
+
+  function shuffleArr(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  function renderQuizConfig(){
+    const stage = document.getElementById('cardStage');
+    const scoped = state.lesson === 'all' ? cards : cards.filter(c=>(c.lesson||'未分類')===state.lesson);
+    const poolAll = scoped.filter(c=>c.category==='main' || c.category==='bonus');
+    const poolReview = poolAll.filter(c=>!c.familiar);
+    const defaultRange = state.quizDefaultRange || 'all';
+
+    stage.innerHTML = `
+      <div class="quiz-config">
+        <div class="qc-title">📝 測驗驗收</div>
+        <div class="qc-sub">選擇測驗範圍與題數，馬上驗收目前${state.lesson==='all' ? '所有課文' : state.lesson}的背誦成果</div>
+
+        <div class="qc-block">
+          <div class="qc-label">測驗範圍</div>
+          <div class="qc-options" id="qcRange">
+            <div class="qc-opt ${defaultRange==='all'?'active':''}" data-range="all">全部語詞（${poolAll.length}）</div>
+            <div class="qc-opt ${defaultRange==='review'?'active':''}" data-range="review">★ 重點複習庫（${poolReview.length}）</div>
+          </div>
+        </div>
+
+        <div class="qc-block">
+          <div class="qc-label">測驗題數</div>
+          <div class="qc-options" id="qcCount">
+            <div class="qc-opt active" data-count="all">全部測驗（100% 全涵蓋）</div>
+            <div class="qc-opt" data-count="10">10 題快速測驗</div>
+            <div class="qc-opt" data-count="20">20 題進階測驗</div>
+          </div>
+        </div>
+
+        <button class="act-btn btn-familiar" id="startQuizBtn" style="width:100%;">🚀 開始測驗</button>
+      </div>
+    `;
+
+    let range = defaultRange;
+    let countMode = 'all';
+
+    function updateCountAvailability(){
+      const pool = range === 'review' ? poolReview : poolAll;
+      document.querySelectorAll('#qcCount .qc-opt').forEach(el=>{
+        const cVal = el.dataset.count;
+        const need = cVal === 'all' ? 1 : parseInt(cVal);
+        const disabled = pool.length < need;
+        el.classList.toggle('disabled', disabled);
+        if(disabled && el.classList.contains('active')){
+          el.classList.remove('active');
+          document.querySelector('#qcCount .qc-opt[data-count="all"]').classList.add('active');
+          countMode = 'all';
+        }
+      });
+    }
+
+    document.querySelectorAll('#qcRange .qc-opt').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        SoundManager.tap();
+        document.querySelectorAll('#qcRange .qc-opt').forEach(x=>x.classList.remove('active'));
+        el.classList.add('active');
+        range = el.dataset.range;
+        updateCountAvailability();
+      });
+    });
+    document.querySelectorAll('#qcCount .qc-opt').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        if(el.classList.contains('disabled')) return;
+        SoundManager.tap();
+        document.querySelectorAll('#qcCount .qc-opt').forEach(x=>x.classList.remove('active'));
+        el.classList.add('active');
+        countMode = el.dataset.count;
+      });
+    });
+    updateCountAvailability();
+
+    document.getElementById('startQuizBtn').addEventListener('click', ()=>{
+      const pool = range === 'review' ? poolReview : poolAll;
+      if(pool.length < 4){
+        showToast('這個範圍內少於 4 張卡片，至少需要 4 張才能出選擇題喔');
+        return;
+      }
+      SoundManager.openSheet();
+      const n = countMode === 'all' ? pool.length : Math.min(parseInt(countMode), pool.length);
+      startQuiz(pool, n);
+    });
+  }
+
+  function buildDistractors(card, pool){
+    let source = pool.filter(c=>c.id!==card.id && c.def!==card.def);
+    if(source.length < 3){
+      source = cards.filter(c=>c.id!==card.id && c.def!==card.def);
+    }
+    const uniqueDefs = [];
+    const seen = new Set([card.def]);
+    shuffleArr(source).forEach(c=>{
+      if(!seen.has(c.def) && uniqueDefs.length < 3){
+        uniqueDefs.push(c.def);
+        seen.add(c.def);
+      }
+    });
+    while(uniqueDefs.length < 3){
+      uniqueDefs.push('（選項不足，建議先新增更多卡片）');
+    }
+    return uniqueDefs;
+  }
+
+  function startQuiz(pool, n){
+    const chosen = shuffleArr(pool).slice(0, n);
+    const questions = chosen.map(card=>{
+      const distractors = buildDistractors(card, pool);
+      const options = shuffleArr([card.def, ...distractors]);
+      return { card, options, correctIndex: options.indexOf(card.def), answered:false };
+    });
+    quizState = { questions, index:0, wrongIds:[], correctCount:0 };
+    document.getElementById('quizOverlay').classList.add('open');
+    renderQuizQuestion();
+  }
+
+  function renderQuizQuestion(){
+    const body = document.getElementById('quizBody');
+    const q = quizState.questions[quizState.index];
+    const letters = ['A','B','C','D'];
+    document.getElementById('quizTag').textContent = '單字測驗挑戰';
+    body.innerHTML = `
+      <div class="quiz-progress">${quizState.index+1} / ${quizState.questions.length}</div>
+      <div class="quiz-prompt">請問下列語詞的正確含意是？</div>
+      <div class="quiz-term">${q.card.term}</div>
+      <div id="quizOptions">
+        ${q.options.map((opt,i)=>`<div class="quiz-opt" data-i="${i}"><span class="opt-letter">${letters[i]}.</span>${opt}</div>`).join('')}
+      </div>
+      <div id="quizFeedback"></div>
+      <div id="quizNextWrap"></div>
+    `;
+    document.querySelectorAll('#quizOptions .quiz-opt').forEach(el=>{
+      el.addEventListener('click', ()=> answerQuiz(parseInt(el.dataset.i)));
+    });
+  }
+
+  function answerQuiz(i){
+    const q = quizState.questions[quizState.index];
+    if(q.answered) return;
+    q.answered = true;
+    const correct = i === q.correctIndex;
+    if(correct) quizState.correctCount++;
+    else quizState.wrongIds.push(q.card.id);
+
+    document.querySelectorAll('#quizOptions .quiz-opt').forEach((el,idx)=>{
+      el.classList.add('disabled');
+      if(idx === q.correctIndex) el.classList.add('correct');
+      else if(idx === i) el.classList.add('wrong');
+    });
+
+    const fb = document.getElementById('quizFeedback');
+    fb.className = 'quiz-feedback ' + (correct ? 'correct':'wrong');
+    fb.textContent = correct ? '✅ 答對了，真棒！' : '❌ 答錯囉，再接再厲！';
+    if(correct){ SoundManager.correct(); } else { SoundManager.wrong(); }
+
+    const isLast = quizState.index === quizState.questions.length - 1;
+    document.getElementById('quizNextWrap').innerHTML =
+      `<button class="quiz-next-btn" id="quizNextBtn">${isLast ? '看結果 →' : '下一題 →'}</button>`;
+    document.getElementById('quizNextBtn').addEventListener('click', ()=>{
+      SoundManager.tap();
+      if(isLast){ renderQuizSummary(); }
+      else { quizState.index++; renderQuizQuestion(); }
+    });
+  }
+
+  function renderQuizSummary(){
+    const body = document.getElementById('quizBody');
+    const total = quizState.questions.length;
+    const correct = quizState.correctCount;
+    const wrongCards = quizState.wrongIds.map(id=>cards.find(c=>c.id===id)).filter(Boolean);
+    document.getElementById('quizTag').textContent = '測驗結果';
+    if(wrongCards.length === 0){ SoundManager.complete(); }
+
+    body.innerHTML = `
+      <div class="quiz-summary-title">${wrongCards.length===0 ? '🎉 全部答對！' : '測驗結束'}</div>
+      <div class="quiz-summary-score">答對 ${correct} / ${total} 題</div>
+      ${wrongCards.length ? `
+        <div style="font-weight:700;font-size:13.5px;margin:10px 0 8px 0;">本次答錯的語詞：</div>
+        ${wrongCards.map(c=>`
+          <div class="quiz-wrong-item">
+            <b>${c.term}</b>
+            <div class="def">${c.def}</div>
+          </div>
+        `).join('')}
+      ` : '<div style="text-align:center;color:var(--ink-soft);font-size:14px;">太厲害了，這回合沒有任何錯題！</div>'}
+      <div class="quiz-summary-actions">
+        ${wrongCards.length ? `
+          <button class="act-btn btn-unfamiliar" id="addWrongToReview">🔖 把錯題加入重點複習</button>
+          <button class="act-btn btn-familiar" id="retestWrong">🔁 只重測錯題</button>
+        ` : ''}
+        <button class="sheet-btn secondary" id="closeQuizBtn">關閉，回到卡片</button>
+      </div>
+    `;
+
+    if(wrongCards.length){
+      document.getElementById('addWrongToReview').addEventListener('click', async ()=>{
+        SoundManager.markReview();
+        wrongCards.forEach(c=>{ c.familiar = false; });
+        await saveCards();
+        showToast('已將錯題加入重點複習庫 🔖');
+        render();
+      });
+      document.getElementById('retestWrong').addEventListener('click', ()=>{
+        SoundManager.openSheet();
+        startQuiz(wrongCards, wrongCards.length);
+      });
+    }
+    document.getElementById('closeQuizBtn').addEventListener('click', closeQuizOverlay);
+  }
+
+  function closeQuizOverlay(){
+    SoundManager.closeSheet();
+    document.getElementById('quizOverlay').classList.remove('open');
+    quizState = null;
+    render();
+  }
+  document.getElementById('quizCloseBtn').addEventListener('click', closeQuizOverlay);
+
+  // Sound toggle
+  const soundToggleBtn = document.getElementById('soundToggle');
+  function applySoundIcon(){
+    const on = SoundManager.isEnabled();
+    soundToggleBtn.textContent = on ? '🔊' : '🔇';
+    soundToggleBtn.classList.toggle('muted', !on);
+  }
+  soundToggleBtn.addEventListener('click', async ()=>{
+    const next = !SoundManager.isEnabled();
+    SoundManager.setEnabled(next);
+    applySoundIcon();
+    if(next) SoundManager.tap();
+    try{ await Storage.set(SOUND_PREF_KEY, next ? 'true' : 'false'); }catch(e){}
+  });
+
+  // init
+  (async function init(){
+    document.getElementById('cardStage').innerHTML = '<div class="empty-state"><div class="big">載入中…</div></div>';
+    try{
+      const pref = await Storage.get(SOUND_PREF_KEY);
+      if(pref && pref.value === 'false'){ SoundManager.setEnabled(false); }
+    }catch(e){ /* default enabled */ }
+    applySoundIcon();
+    await loadCards();
+    render();
+  })();
+})();
+</script>
+</body>
+</html>
